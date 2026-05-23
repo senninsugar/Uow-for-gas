@@ -1,3 +1,4 @@
+// api/invidious.ts
 import axios, { AxiosError } from 'axios'
 
 const instances = [
@@ -5,18 +6,26 @@ const instances = [
 ]
 
 async function request(path: string) {
-  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  const cleanPath = path.startsWith('/')
+    ? path
+    : `/${path}`
 
   for (const instance of instances) {
     try {
-      const res = await axios.get(`${instance}${cleanPath}`, {
-        timeout: 5000
-      })
+      const res = await axios.get(
+        `${instance}${cleanPath}`,
+        {
+          timeout: 5000
+        }
+      )
 
       return res.data
     } catch (e) {
       const error = e as AxiosError
-      console.warn(`Instance failed: ${instance}${cleanPath} | Reason: ${error.message}`)
+
+      console.warn(
+        `Instance failed: ${instance}${cleanPath} | Reason: ${error.message}`
+      )
     }
   }
 
@@ -24,7 +33,9 @@ async function request(path: string) {
 }
 
 export async function searchVideos(query: string) {
-  return request(`/api/v1/search?q=${encodeURIComponent(query)}&type=video`)
+  return request(
+    `/api/v1/search?q=${encodeURIComponent(query)}&type=video`
+  )
 }
 
 export async function trendingVideos() {

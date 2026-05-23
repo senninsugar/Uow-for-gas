@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const instances = [
-  'https://uow-bakend12.vercel.app/'
+  'https://uow-bakend12.vercel.app'
 ]
 
 async function request(path: string) {

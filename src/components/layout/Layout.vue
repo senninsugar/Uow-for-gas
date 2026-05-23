@@ -17,11 +17,13 @@ import Sidebar from './Sidebar.vue'
 <style scoped>
 .layout-container {
   --sidebar-width: 240px;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: 100vh;
 }
 
 .main-content {
   padding-top: 4rem;
-  padding-left: var(--sidebar-width);
-  transition: padding-left 0.3s ease;
+  width: 100%;
 }
 </style>

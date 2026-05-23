@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-// 相対パスに修正して確実にViteがファイルを解決できるように変更
+// テキストファイルとしてrawインポート
 import youtubeLogoBase64 from '../img/youtubelogo.txt?raw'
 
 const query = ref('')
 const router = useRouter()
+
+// マテリアルフォントを動的に読み込む処理を追加
+onMounted(() => {
+  const link = document.createElement('link')
+  link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0'
+  link.rel = 'stylesheet'
+  document.head.appendChild(link)
+})
 
 function search() {
   // 空文字の場合は検索しない（本家の挙動）
@@ -26,7 +34,7 @@ function search() {
       <!-- YouTube ロゴ（Base64の画像データを使用） -->
       <a href="/" class="flex items-center cursor-pointer" style="height: 20px;">
         <img 
-          :src="`data:image/svg+xml;base64,${youtubeLogoBase64.trim()}`" 
+          :src="'data:image/svg+xml;base64,' + youtubeLogoBase64.replace(/(\r\n|\n|\r)/gm, '')" 
           alt="YouTube Logo" 
           class="h-full object-contain"
         />
@@ -103,6 +111,18 @@ function search() {
 <style scoped>
 /* Material Symbols の細かな微調整（FILLプロパティの有効化など） */
 .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
 </style>

@@ -1,17 +1,47 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import youtubeLogoBase64 from '../img/youtubelogo.txt?raw'
 
 const query = ref('')
 const router = useRouter()
 
-onMounted(() => {
+// 通知関連の状態
+const notifications = ref<any[]>([])
+const showNotifications = ref(false)
+const notificationRef = ref<HTMLElement | null>(null)
+
+// 未読件数の計算
+const unreadCount = () => notifications.value.filter(n => n.unread).length
+
+onMounted(async () => {
+  // Google Fonts読み込み
   const link = document.createElement('link')
   link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0'
   link.rel = 'stylesheet'
   document.head.appendChild(link)
+
+  // 通知データの取得
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/senninsugar/senninservice/refs/heads/main/blog/uowblog.json')
+    notifications.value = await response.json()
+  } catch (e) {
+    console.error('通知の取得に失敗しました', e)
+  }
+
+  // 外側クリックで閉じる処理
+  document.addEventListener('click', handleClickOutside)
 })
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+function handleClickOutside(event: MouseEvent) {
+  if (notificationRef.value && !notificationRef.value.contains(event.target as Node)) {
+    showNotifications.value = false
+  }
+}
 
 function search() {
   if (!query.value.trim()) return
@@ -68,15 +98,38 @@ function search() {
       </button>
     </div>
 
-    <div class="flex items-center gap-2">
-      
-      <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 relative transition-colors" title="通知">
+    <div class="flex items-center gap-2" ref="notificationRef">
+      <button 
+        class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 relative transition-colors" 
+        title="通知"
+        @click="showNotifications = !showNotifications"
+      >
         <span class="material-symbols-outlined text-[24px]">notifications</span>
-        <span class="absolute top-1 right-1 bg-red-600 text-[10px] font-medium text-white px-1 rounded-full min-w-[16px] text-center">
-          9+
+        <span 
+          v-if="unreadCount() > 0" 
+          class="absolute top-1 right-1 bg-red-600 text-[10px] font-medium text-white px-1 rounded-full min-w-[16px] text-center"
+        >
+          {{ unreadCount() > 9 ? '9+' : unreadCount() }}
         </span>
       </button>
-      
+
+      <!-- 通知ドロップダウン -->
+      <div 
+        v-if="showNotifications"
+        class="absolute top-14 right-4 w-80 bg-white border border-zinc-200 shadow-lg rounded-xl overflow-hidden z-50"
+      >
+        <div class="p-4 border-b border-zinc-100 font-bold">通知</div>
+        <div class="max-h-[400px] overflow-y-auto">
+          <div 
+            v-for="(item, index) in notifications" 
+            :key="index"
+            class="p-4 hover:bg-zinc-50 cursor-pointer border-b border-zinc-50"
+          >
+            <p class="text-sm text-zinc-800">{{ item.title }}</p>
+            <p class="text-xs text-zinc-500 mt-1">{{ item.date }}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
   </header>

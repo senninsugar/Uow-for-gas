@@ -4,10 +4,24 @@ import Sidebar from './Sidebar.vue'
 </script>
 
 <template>
-  <Header />
-  <Sidebar />
+  <div class="layout-container">
+    <Header />
+    <Sidebar />
 
-  <main class="pt-16 pl-60">
-    <slot />
-  </main>
+    <main class="main-content">
+      <slot />
+    </main>
+  </div>
 </template>
+
+<style scoped>
+.layout-container {
+  --sidebar-width: 240px;
+}
+
+.main-content {
+  padding-top: 4rem;
+  padding-left: var(--sidebar-width);
+  transition: padding-left 0.3s ease;
+}
+</style>

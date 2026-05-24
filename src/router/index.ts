@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 import Home from '../pages/Home.vue'
 import Watch from '../pages/Watch.vue'
@@ -10,7 +10,7 @@ import History from '../pages/History.vue'
 import Playlist from '../pages/Playlist.vue'
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
 
   routes: [
     {

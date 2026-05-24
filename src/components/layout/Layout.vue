@@ -1,73 +1,129 @@
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import Header from './Header.vue'
-import Sidebar from './Sidebar.vue'
-import Setting from './Setting.vue'
-
-const isCompact = ref(true)
-const isSettingsOpen = ref(false)
-
-function toggleSidebar() {
-  isCompact.value = !isCompact.value
-}
-
-function toggleSettings() {
-  isSettingsOpen.value = !isSettingsOpen.value
-}
-
-const sidebarWidth = computed(() => {
-  return isCompact.value ? '70px' : '250px'
-})
-</script>
-
 <template>
-  <div class="layout-container">
-    <Header @toggle-sidebar="toggleSidebar" />
-
-    <Sidebar
-      :is-open="true"
-      :is-compact="isCompact"
-      @open-settings="toggleSettings"
-    />
-
-    <div class="settings-drawer" :class="{ 'is-open': isSettingsOpen }" :style="{ left: sidebarWidth }">
-      <Setting @close="isSettingsOpen = false" />
+  <div class="setting-container">
+    <div class="setting-header">
+      <h2>設定</h2>
+      <button @click="$emit('close')">×</button>
     </div>
+    <div class="setting-body">
+      <!-- ここに設定コンテンツを記述 -->
+      <p>設定項目がここに入ります。</p>
 
-    <main
-      class="main-content"
-      :style="{ marginLeft: sidebarWidth }"
-    >
-      <slot />
-    </main>
+      <div class="setting-section">
+        <h3>カスタムエンドポイント</h3>
+
+        <input
+          v-model="customEndpoint"
+          type="text"
+          placeholder="https://example.com/api"
+          class="setting-input"
+        />
+
+        <button
+          class="save-button"
+          @click="saveEndpoint"
+        >
+          保存
+        </button>
+      </div>
+
+      <div class="setting-section">
+        <h3>使用モード</h3>
+
+        <label class="checkbox-label">
+          <input
+            type="radio"
+            value="default"
+            v-model="endpointMode"
+          />
+          既存APIのみ使用
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="radio"
+            value="custom"
+            v-model="endpointMode"
+          />
+          カスタムエンドポイントのみ使用
+        </label>
+
+        <label class="checkbox-label">
+          <input
+            type="radio"
+            value="rotation"
+            v-model="endpointMode"
+          />
+          ローテーションして使用
+        </label>
+      </div>
+    </div>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+
+defineEmits(['close'])
+
+const customEndpoint = ref('')
+const endpointMode = ref('default')
+
+onMounted(() => {
+  const savedEndpoint = localStorage.getItem('custom_endpoint')
+  const savedMode = localStorage.getItem('endpoint_mode')
+
+  if (savedEndpoint) {
+    customEndpoint.value = savedEndpoint
+  }
+
+  if (savedMode) {
+    endpointMode.value = savedMode
+  }
+})
+
+function saveEndpoint() {
+  localStorage.setItem(
+    'custom_endpoint',
+    customEndpoint.value
+  )
+}
+
+watch(endpointMode, (value) => {
+  localStorage.setItem('endpoint_mode', value)
+})
+</script>
+
 <style scoped>
-.layout-container {
+.setting-container {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+.setting-header {
   display: flex;
-  min-height: 100vh;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
-
-.settings-drawer {
-  position: fixed;
-  top: 56px;
-  bottom: 0;
-  width: 300px;
-  background: #fff;
-  border-right: 1px solid #e5e5e5;
-  z-index: 90;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease, left 0.3s ease;
+.setting-section {
+  margin-top: 20px;
 }
-
-.settings-drawer.is-open {
-  transform: translateX(0);
+.setting-input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
-
-.main-content {
-  flex: 1;
-  padding-top: 4rem;
-  transition: margin-left 0.3s ease;
+.save-button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.checkbox-label {
+  display: block;
+  margin-top: 10px;
 }
 </style>

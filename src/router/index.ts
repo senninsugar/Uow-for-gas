@@ -4,6 +4,7 @@ import Home from '../pages/Home.vue'
 import Watch from '../pages/Watch.vue'
 import Search from '../pages/Search.vue'
 import Shorts from '../pages/Shorts.vue'
+import Channel from '../pages/Channel.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -27,6 +28,11 @@ const router = createRouter({
     {
       path: '/shorts',
       component: Shorts,
+    },
+
+    {
+      path: '/channel/:id',
+      component: Channel,
     },
   ],
 })

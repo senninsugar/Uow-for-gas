@@ -48,8 +48,8 @@ const router = createRouter({
       component: History,
     },
     {
-  path: '/playlist',
-  component: Playlist,
+      path: '/playlist',
+      component: Playlist,
 　　 },
   ],
 })

@@ -2,6 +2,8 @@
 import { ref, onMounted, onUnmounted, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
 import youtubeLogoBase64 from '../img/youtubelogo.txt?raw'
+import Voice from './voice.vue'
+import Account from './account.vue' // アカウントコンポーネントのインポート
 
 const emit = defineEmits(['toggle-sidebar'])
 
@@ -12,6 +14,14 @@ const router = useRouter()
 const notifications = ref<any[]>([])
 const showNotifications = ref(false)
 const notificationRef = ref<HTMLElement | null>(null)
+
+// アカウント関連の状態
+const showAccount = ref(false)
+const accountRef = ref<HTMLElement | null>(null)
+
+// 音声入力関連
+const showVoice = ref(false)
+const recognition = ref<any>(null)
 
 // 未読件数の計算
 const unreadCount = () => notifications.value.filter(n => n.unread).length
@@ -33,21 +43,70 @@ onMounted(async () => {
 
   // 外側クリックで閉じる処理
   document.addEventListener('click', handleClickOutside)
+
+  // 音声認識初期化
+  const SpeechRecognition =
+    (window as any).SpeechRecognition ||
+    (window as any).webkitSpeechRecognition
+
+  if (SpeechRecognition) {
+    recognition.value = new SpeechRecognition()
+    recognition.value.lang = 'ja-JP'
+    recognition.value.interimResults = true
+    recognition.value.continuous = false
+
+    recognition.value.onresult = (event: any) => {
+      let transcript = ''
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript
+      }
+
+      query.value = transcript
+    }
+
+    recognition.value.onend = () => {
+      showVoice.value = false
+    }
+
+    recognition.value.onerror = () => {
+      showVoice.value = false
+    }
+  }
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+
+  if (recognition.value) {
+    recognition.value.stop()
+  }
 })
 
 function handleClickOutside(event: MouseEvent) {
+  // 通知の外側クリック判定
   if (notificationRef.value && !notificationRef.value.contains(event.target as Node)) {
     showNotifications.value = false
+  }
+  // アカウントの外側クリック判定
+  if (accountRef.value && !accountRef.value.contains(event.target as Node)) {
+    showAccount.value = false
   }
 }
 
 function search() {
   if (!query.value.trim()) return
   router.push(`/results?search_query=${encodeURIComponent(query.value)}`)
+}
+
+function startVoiceSearch() {
+  if (!recognition.value) {
+    alert('このブラウザは音声入力に対応していません')
+    return
+  }
+
+  showVoice.value = true
+  recognition.value.start()
 }
 </script>
 
@@ -61,7 +120,7 @@ function search() {
       >
         <span class="material-symbols-outlined text-[24px]">menu</span>
       </button>
-          
+        
       <a href="/" class="flex items-center cursor-pointer" style="height: 40px;">
         <img 
           :src="youtubeLogoBase64.trim().startsWith('data:') ? youtubeLogoBase64.trim() : 'data:image/jpeg;base64,' + youtubeLogoBase64.replace(/\s/g, '')" 
@@ -98,45 +157,63 @@ function search() {
         </button>
       </div>
 
-      <button class="w-10 h-10 bg-zinc-50 hover:bg-zinc-100 active:bg-zinc-200 rounded-full flex items-center justify-center transition-colors" title="音声で検索">
+      <button
+        @click="startVoiceSearch"
+        class="w-10 h-10 bg-zinc-50 hover:bg-zinc-100 active:bg-zinc-200 rounded-full flex items-center justify-center transition-colors"
+        title="音声で検索"
+      >
         <span class="material-symbols-outlined text-[24px]">mic</span>
       </button>
     </div>
 
-    <div class="flex items-center gap-2" ref="notificationRef">
-      <button 
-        class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 relative transition-colors" 
-        title="通知"
-        @click="showNotifications = !showNotifications"
-      >
-        <span class="material-symbols-outlined text-[24px]">notifications</span>
-        <span 
-          v-if="unreadCount() > 0" 
-          class="absolute top-1 right-1 bg-red-600 text-[10px] font-medium text-white px-1 rounded-full min-w-[16px] text-center"
+    <div class="flex items-center gap-2">
+      <div ref="notificationRef" class="relative flex items-center">
+        <button 
+          class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 relative transition-colors" 
+          title="通知"
+          @click="showNotifications = !showNotifications; showAccount = false"
         >
-          {{ unreadCount() > 9 ? '9+' : unreadCount() }}
-        </span>
-      </button>
-
-      <!-- 通知ドロップダウン -->
-      <div 
-        v-if="showNotifications"
-        class="absolute top-14 right-4 w-80 bg-white border border-zinc-200 shadow-lg rounded-xl overflow-hidden z-50"
-      >
-        <div class="p-4 border-b border-zinc-100 font-bold">通知</div>
-        <div class="max-h-[400px] overflow-y-auto">
-          <div 
-            v-for="(item, index) in notifications" 
-            :key="index"
-            class="p-4 hover:bg-zinc-50 cursor-pointer border-b border-zinc-50"
+          <span class="material-symbols-outlined text-[24px]">notifications</span>
+          <span 
+            v-if="unreadCount() > 0" 
+            class="absolute top-1 right-1 bg-red-600 text-[10px] font-medium text-white px-1 rounded-full min-w-[16px] text-center"
           >
-            <p class="text-sm text-zinc-800">{{ item.title }}</p>
-            <p class="text-xs text-zinc-500 mt-1">{{ item.date }}</p>
+            {{ unreadCount() > 9 ? '9+' : unreadCount() }}
+          </span>
+        </button>
+
+        <div 
+          v-if="showNotifications"
+          class="absolute top-14 right-0 w-80 bg-white border border-zinc-200 shadow-lg rounded-xl overflow-hidden z-50"
+        >
+          <div class="p-4 border-b border-zinc-100 font-bold">通知</div>
+          <div class="max-h-[400px] overflow-y-auto">
+            <div 
+              v-for="(item, index) in notifications" 
+              :key="index"
+              class="p-4 hover:bg-zinc-50 cursor-pointer border-b border-zinc-50"
+            >
+              <p class="text-sm text-zinc-800">{{ item.title }}</p>
+              <p class="text-xs text-zinc-500 mt-1">{{ item.date }}</p>
+            </div>
           </div>
         </div>
       </div>
+
+      <div ref="accountRef" class="relative flex items-center">
+        <button 
+          class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors" 
+          title="アカウント"
+          @click="showAccount = !showAccount; showNotifications = false"
+        >
+          <span class="material-symbols-outlined text-[24px]">account_circle</span>
+        </button>
+
+        <Account v-if="showAccount" />
+      </div>
     </div>
 
+    <Voice v-if="showVoice" />
   </header>
 </template>
 

@@ -19,6 +19,7 @@ const video = ref<any>(null)
 const comments = ref<any[]>([])
 const relatedVideos = ref<any[]>([])
 const loading = ref(true)
+const error = ref(false) // エラー状態を管理するRefを追加
 
 const selectedStream = ref('youtube-nocookie')
 
@@ -162,6 +163,7 @@ async function shareVideo() {
 
 async function loadVideo() {
   loading.value = true
+  error.value = false // リクエスト開始時にエラーをリセット
 
   try {
     const id = route.params.id as string
@@ -219,6 +221,9 @@ async function loadVideo() {
         ...v,
         thumbnail: `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`
       }))
+  } catch (err) {
+    console.error(err)
+    error.value = true // エラー発生時にフラグを立てる
   } finally {
     loading.value = false
   }
@@ -239,6 +244,24 @@ watch(
     <Loading v-if="loading" />
 
     <div
+      v-else-if="error"
+      class="bg-white text-black min-h-screen flex flex-col items-center justify-center p-6 text-center"
+    >
+      <div class="text-xl font-bold mb-4 text-zinc-800">
+        情報の取得に失敗しました。
+      </div>
+      <p class="text-sm text-zinc-500 mb-6">
+        ネットワーク接続を確認するか、しばらく時間を置いてから再度お試しください。
+      </p>
+      <button
+        class="bg-black text-white hover:bg-zinc-800 transition px-6 h-12 rounded-full font-semibold shadow-md"
+        @click="loadVideo"
+      >
+        再読み込み
+      </button>
+    </div>
+
+    <div
       v-else
       class="bg-white text-black min-h-screen"
     >
@@ -246,7 +269,6 @@ watch(
         class="p-6 max-w-[1700px] mx-auto grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-8"
       >
 
-        <!-- LEFT -->
         <div>
 
           <VideoPlayer
@@ -256,7 +278,6 @@ watch(
             :format-streams="video?.formatStreams"
           />
 
-          <!-- STREAM SELECT -->
           <div class="mt-4 flex items-center gap-3">
             <div class="font-semibold text-sm text-zinc-600">
               プレイヤー
@@ -280,15 +301,12 @@ watch(
             </select>
           </div>
 
-          <!-- TITLE -->
           <h1 class="text-2xl font-bold mt-4 leading-tight">
             {{ video?.title }}
           </h1>
 
-          <!-- ACTION BAR -->
           <div class="flex items-center justify-between mt-5 flex-wrap gap-4">
 
-            <!-- CHANNEL -->
             <RouterLink
               :to="`/channel/${video?.authorId}`"
               class="flex items-center gap-4"
@@ -311,7 +329,6 @@ watch(
 
             </RouterLink>
 
-            <!-- BUTTONS -->
             <div class="flex items-center gap-2 flex-wrap">
 
               <button
@@ -377,7 +394,6 @@ watch(
             </div>
           </div>
 
-          <!-- STATS -->
           <div
             class="bg-zinc-100 rounded-2xl p-4 mt-6"
           >
@@ -422,7 +438,6 @@ watch(
             </button>
           </div>
 
-          <!-- COMMENTS -->
           <div class="mt-8">
 
             <h2 class="text-xl font-bold mb-6">
@@ -478,10 +493,9 @@ watch(
           </div>
         </div>
 
-        <!-- RIGHT -->
         <div>
 
-          <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-4">
 
             <RouterLink
               v-for="related in relatedVideos"

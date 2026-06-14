@@ -21,7 +21,7 @@ const accountRef = ref<HTMLElement | null>(null)
 const showVoice = ref(false)
 const recognition = ref<any>(null)
 
-const suggestions = ref<string[]>()
+const suggestions = ref<string[]>([])
 const showSuggestions = ref(false)
 const activeSuggestionIndex = ref(-1)
 const searchContainerRef = ref<HTMLElement | null>(null)
@@ -180,7 +180,7 @@ function startVoiceSearch() {
             placeholder="検索"
             @keyup.enter="search"
             @keydown="handleKeyDown"
-            @focus="showSuggestions = query.trim().length > 0 && suggestions && suggestions.length > 0"
+            @focus="showSuggestions = query.trim().length > 0 && suggestions.length > 0"
           />
           <button 
             v-if="query" 
@@ -200,7 +200,7 @@ function startVoiceSearch() {
         </button>
 
         <div 
-          v-if="showSuggestions && suggestions && suggestions.length > 0" 
+          v-if="showSuggestions && suggestions.length > 0" 
           class="absolute top-11 left-0 right-[64px] bg-white border border-zinc-200 shadow-xl rounded-2xl py-3 z-50 overflow-hidden"
         >
           <ul>

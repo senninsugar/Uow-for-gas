@@ -222,7 +222,7 @@ async function loadVideo() {
         authorThumbnail:    
           comment.authorThumbnails?.[1]?.url ||    
           comment.authorThumbnails?.[0]?.url ||    
-          `https://yt3.ggpht.com/ytc/default-user=s88-c-k-c0x00ffffff-no-rj` `   
+          `https://yt3.ggpht.com/ytc/default-user=s88-c-k-c0x00ffffff-no-rj`    
       })) || []    
     
     const related = await searchVideos(video.value.title)    
